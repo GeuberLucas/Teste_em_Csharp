@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -24,8 +26,12 @@ namespace Teste_Csharp
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllersWithViews();
+            var connectionString = @"Integrated Security = SSPI;Persist Security Info=False;Initial Catalog=Testes;Data Source=TISUPERSIMPLES\SQLEXPRESS";
+            services.AddDbContext<IdentityDbContext>(
+                opt => opt.UseSqlServer(connectionString)
+            );
             services.AddIdentityCore<IdentityUser>(options => { });
-            services.AddScoped<IUserStore<IdentityUser>, MyIdentityUserStore>();
+            services.AddScoped<IUserStore<IdentityUser>,UserOnlyStore<IdentityUser, IdentityDbContext>>();
 
 
             services.AddAuthentication("cookies").AddCookie("cookies", options =>  options.LoginPath = "/Home/Login");
