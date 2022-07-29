@@ -9,6 +9,7 @@ using Microsoft.Extensions.Hosting;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace Teste_Csharp
@@ -27,14 +28,30 @@ namespace Teste_Csharp
         {
             services.AddControllersWithViews();
             var connectionString = @"Integrated Security = SSPI;Persist Security Info=False;Initial Catalog=Testes;Data Source=TISUPERSIMPLES\SQLEXPRESS";
-            services.AddDbContext<IdentityDbContext>(
-                opt => opt.UseSqlServer(connectionString)
+            var migrationAssembly = typeof(Startup)
+                .GetTypeInfo().Assembly
+                .GetName().Name;
+            services.AddDbContext<MyUserDbContext>(
+                opt => opt.UseSqlServer(connectionString, sql => sql.MigrationsAssembly(migrationAssembly))
             );
-            services.AddIdentityCore<IdentityUser>(options => { });
-            services.AddScoped<IUserStore<IdentityUser>,UserOnlyStore<IdentityUser, IdentityDbContext>>();
+            services.AddIdentity<MyUser, IdentityRole>(options => {
+                options.SignIn.RequireConfirmedEmail = true;
+                options.Password.RequireDigit = false;
+                options.Password.RequireNonAlphanumeric = false;
+                options.Password.RequireUppercase = false;
+                options.Password.RequiredLength = 4;
+                options.Password.RequireLowercase = false;
 
+            }).AddEntityFrameworkStores<MyUserDbContext>()
+                .AddDefaultTokenProviders().AddPasswordValidator<NotContainValidator<MyUser>>();
+            services.AddScoped<IUserStore<MyUser>,UserOnlyStore<MyUser, MyUserDbContext>>();
+            services.AddScoped<IUserClaimsPrincipalFactory<MyUser>, MyUserClaimsPrincipalFactory>();
 
-            services.AddAuthentication("cookies").AddCookie("cookies", options =>  options.LoginPath = "/Home/Login");
+            services.Configure<DataProtectionTokenProviderOptions>(
+            options => options.TokenLifespan = TimeSpan.FromHours(3)
+                
+           );
+           services.ConfigureApplicationCookie(options =>  options.LoginPath = "/Home/Login");
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
