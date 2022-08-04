@@ -45,21 +45,33 @@ namespace Teste_Csharp.Controllers
             if (ModelState.IsValid)
             {
                 var user = await _userManager.FindByNameAsync(obj.UserName);
-                if (user != null && await _userManager.CheckPasswordAsync(user, obj.Password))
+                if (user != null && !await _userManager.IsLockedOutAsync(user))
                 {
-                    if (!await _userManager.IsEmailConfirmedAsync(user))
+
+                    if(await _userManager.CheckPasswordAsync(user, obj.Password))
                     {
-                        ModelState.AddModelError("", "Email Invalida");
-                        return View();
+                        if (!await _userManager.IsEmailConfirmedAsync(user))
+                        {
+                            ModelState.AddModelError("", "Email Invalida");
+                            return View();
+                        }
+                        await _userManager.ResetAccessFailedCountAsync(user);
+
+                        var principal = await _userClaimsPrincipalFactory.CreateAsync(user);
+
+                        await HttpContext.SignInAsync("Identity.Application", principal);
+                        var signInResult = await _signInManager.PasswordSignInAsync(obj.UserName, obj.Password, false, false);
+
+                        if (signInResult.Succeeded)
+                        {
+                            return RedirectToAction("About");
+                        }
                     }
-                    var principal = await _userClaimsPrincipalFactory.CreateAsync(user);
+                    await _userManager.AccessFailedAsync(user);
 
-                    await HttpContext.SignInAsync("Identity.Application", principal);
-                    var signInResult = await _signInManager.PasswordSignInAsync(obj.UserName, obj.Password, false, false);
-
-                    if (signInResult.Succeeded)
+                    if(await _userManager.IsLockedOutAsync(user))
                     {
-                        return RedirectToAction("About");
+
                     }
                 }
                 ModelState.AddModelError("", "Usuário ou Senha Invalida");

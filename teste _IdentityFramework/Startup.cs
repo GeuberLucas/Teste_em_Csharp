@@ -42,6 +42,10 @@ namespace Teste_Csharp
                 options.Password.RequiredLength = 4;
                 options.Password.RequireLowercase = false;
 
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
+                options.Lockout.AllowedForNewUsers = true;
+                options.Lockout.MaxFailedAccessAttempts = 3;
+
             }).AddEntityFrameworkStores<MyUserDbContext>()
                 .AddDefaultTokenProviders().AddPasswordValidator<NotContainValidator<MyUser>>();
             services.AddScoped<IUserStore<MyUser>,UserOnlyStore<MyUser, MyUserDbContext>>();

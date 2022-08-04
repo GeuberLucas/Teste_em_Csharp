@@ -18,14 +18,14 @@ namespace Teste_Csharp
         {
             base.OnModelCreating(builder);
 
-            builder.Entity<Organization>(org =>
-            {
+            //builder.Entity<Organization>(org =>
+            //{
 
-                org.ToTable("Organizations");
-                org.HasKey(x => x.Id);
-                org.HasMany<MyUser>().WithOne().HasForeignKey(x => x.OrgId).IsRequired(false);
-            }
-            ) ;
+            //    org.ToTable("Organizations");
+            //    org.HasKey(x => x.Id);
+            //    org.HasMany<MyUser>().WithOne().HasForeignKey(x => x.OrgId).IsRequired(false);
+            //}
+            //) ;
 
         }
     }

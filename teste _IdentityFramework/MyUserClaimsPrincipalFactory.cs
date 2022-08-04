@@ -18,7 +18,7 @@ namespace Teste_Csharp
         protected override async Task<ClaimsIdentity> GenerateClaimsAsync(MyUser user)
         {
             var identity = await base.GenerateClaimsAsync(user);
-            identity.AddClaim(new Claim("Member", user.FullName));
+            //identity.AddClaim(new Claim("Member", user.FullName));
             return identity;
         }
     }
